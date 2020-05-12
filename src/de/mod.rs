@@ -117,9 +117,9 @@ use crate::{
     events::{BytesStart, BytesText, Event},
     Reader,
 };
-use serde::de::{self, DeserializeOwned};
+use serde::de::{self, Deserialize, DeserializeOwned};
 use serde::forward_to_deserialize_any;
-use std::io::BufRead;
+use std::io::{BufRead, Cursor};
 
 const INNER_VALUE: &str = "$value";
 
@@ -131,8 +131,9 @@ pub struct Deserializer<R: BufRead> {
 }
 
 /// Deserialize a xml string
-pub fn from_str<T: DeserializeOwned>(s: &str) -> Result<T, DeError> {
-    from_reader(s.as_bytes())
+pub fn from_str<'de, T: Deserialize<'de>>(s: &str) -> Result<T, DeError> {
+    let mut de = Deserializer::from_reader(Cursor::new(s));
+    T::deserialize(&mut de)
 }
 
 /// Deserialize from a reader
